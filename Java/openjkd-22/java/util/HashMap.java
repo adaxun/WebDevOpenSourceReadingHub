@@ -66,6 +66,10 @@ import jdk.internal.access.SharedSecrets;
  * structures are rebuilt) so that the hash table has approximately twice the
  * number of buckets.
  *
+ * 负载因子选择0.75 是时间和空间成本的权衡
+ * 
+ * 初始化 初始容量时要结合负载因子和最大元素数量，尽量减少rehash的次数
+ * 初始容量*负载因子 > 最大元素数量的话 就不用rehash了
  * <p>As a general rule, the default load factor (.75) offers a good
  * tradeoff between time and space costs.  Higher values decrease the
  * space overhead but increase the lookup cost (reflected in most of
@@ -197,6 +201,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * 6:    0.00001316
      * 7:    0.00000094
      * 8:    0.00000006
+     * 树节点比
+     * 
      * more: less than 1 in ten million 使用泊松分布预测链表的长度，负载因子为0.75 链表长度为8的时候概率极小，
      * 所以链表长度为8的时将bin里的链表改为红黑树将查询时间复杂度优化为O(logn)
      * 
@@ -642,20 +648,20 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @param hash hash for key
      * @param key the key
      * @param value the value to put
-     * @param onlyIfAbsent if true, don't change existing value
-     * @param evict if false, the table is in creation mode.
+     * @param onlyIfAbsent if true, don't change existing value 如果存在不修改原先的value值
+     * @param evict if false, the table is in creation mode. false->创建者模式
      * @return previous value, or null if none
      */
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
         Node<K,V>[] tab; Node<K,V> p; int n, i;
-        if ((tab = table) == null || (n = tab.length) == 0)
+        if ((tab = table) == null || (n = tab.length) == 0)//是否为0 -> 进行扩容
             n = (tab = resize()).length;
-        if ((p = tab[i = (n - 1) & hash]) == null)
-            tab[i] = newNode(hash, key, value, null);
-        else {
+        if ((p = tab[i = (n - 1) & hash]) == null) // 如果当前的tab为空
+            tab[i] = newNode(hash, key, value, null); // 创建新的结点并加入进去
+        else {//找到相同key的结点 找不到则新建一个
             Node<K,V> e; K k;
-            if (p.hash == hash &&
+            if (p.hash == hash && // 如果当前的桶不为空 检查key是否一样，一样
                 ((k = p.key) == key || (key != null && key.equals(k))))
                 e = p;
             else if (p instanceof TreeNode)
@@ -674,16 +680,16 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     p = e;
                 }
             }
-            if (e != null) { // existing mapping for key
+            if (e != null) { // existing mapping for key 存在的结点如果不为空
                 V oldValue = e.value;
-                if (!onlyIfAbsent || oldValue == null)
-                    e.value = value;
+                if (!onlyIfAbsent || oldValue == null)// 需要覆盖或则原value==null 则覆盖
+                    e.value = value; 
                 afterNodeAccess(e);
                 return oldValue;
             }
         }
         ++modCount;
-        if (++size > threshold)
+        if (++size > threshold)// 如果超过阈值的话 扩容
             resize();
         afterNodeInsertion(evict);
         return null;
@@ -1985,7 +1991,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         TreeNode<K,V> parent;  // red-black tree links
         TreeNode<K,V> left;
         TreeNode<K,V> right;
-        TreeNode<K,V> prev;    // needed to unlink next upon deletion
+        TreeNode<K,V> prev;    // needed to unlink next upon deletion 指向前驱节点，在删除时方便
         boolean red;
         TreeNode(int hash, K key, V val, Node<K,V> next) {
             super(hash, key, val, next);
