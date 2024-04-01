@@ -142,6 +142,8 @@ import jdk.internal.misc.Unsafe;
  * <em>optional</em> methods of the {@link Map} and {@link Iterator}
  * interfaces.
  *
+ * 像HashTable 一样 key 和 value 都不能是 null
+ * HashMap key 和value key是null
  * <p>Like {@link Hashtable} but unlike {@link HashMap}, this class
  * does <em>not</em> allow {@code null} to be used as a key or value.
  *
@@ -790,6 +792,13 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     private transient volatile long baseCount;
 
     /**
+     * 用来控制数组的大小
+     * 负数：
+     *  -1： 正在初始化
+     * -（1+N)：有N个在扩容的线程
+     * 0 默认长度
+     * + 如果table是null 此时sizeCtl表示初始
+     *   如果table不是null 则表示再次扩容的阈值
      * Table initialization and resizing control.  When negative, the
      * table is being initialized or resized: -1 for initialization,
      * else -(1 + the number of active resizing threads).  Otherwise,
@@ -1014,8 +1023,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         for (Node<K,V>[] tab = table;;) {
             Node<K,V> f; int n, i, fh; K fk; V fv;
             if (tab == null || (n = tab.length) == 0)
-                tab = initTable();
-            else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+                tab = initTable();// 数组没初始化的话 自旋初始化
+            else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) { //如果为空 则cas 加上新节点，无需加锁
                 if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value)))
                     break;                   // no lock when adding to empty bin
             }

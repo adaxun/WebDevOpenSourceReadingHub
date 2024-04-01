@@ -2825,7 +2825,7 @@ public class Collections {
      * map.  In order to guarantee serial access, it is critical that
      * <strong>all</strong> access to the backing map is accomplished
      * through the returned map.<p>
-     *
+     * 强调：使用迭代器、流 遍历返回的map时需要加同步锁
      * It is imperative that the user manually synchronize on the returned
      * map when traversing any of its collection views via {@link Iterator},
      * {@link Spliterator} or {@link Stream}:
@@ -2865,7 +2865,7 @@ public class Collections {
         @SuppressWarnings("serial") // Conditionally serializable
         private final Map<K,V> m;     // Backing Map
         @SuppressWarnings("serial") // Conditionally serializable
-        final Object      mutex;        // Object on which to synchronize
+        final Object      mutex;        // Object on which to synchronize 通过对象锁来保证同步
 
         SynchronizedMap(Map<K,V> m) {
             this.m = Objects.requireNonNull(m);

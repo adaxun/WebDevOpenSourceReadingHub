@@ -39,6 +39,7 @@ import jdk.internal.access.SharedSecrets;
  * objects used as keys must implement the {@code hashCode}
  * method and the {@code equals} method. <p>
  *
+ * HashTable有两个元素影响它的性能：初始容量和负载因子
  * An instance of {@code Hashtable} has two parameters that affect its
  * performance: <i>initial capacity</i> and <i>load factor</i>.  The
  * <i>capacity</i> is the number of <i>buckets</i> in the hash table, and the
@@ -108,7 +109,12 @@ import jdk.internal.access.SharedSecrets;
  * <p>As of the Java 2 platform v1.2, this class was retrofitted to
  * implement the {@link Map} interface, making it a member of the
  * <a href="{@docRoot}/java.base/java/util/package-summary.html#CollectionsFramework">
- *
+ * 
+ * 
+ * Hashtable是同步的集合框架实现，如果线程安全的话 推荐使用HashMap
+ * 如果需要高并发的线程安全框架的话 推荐使用JUC.ConcurrentHashMap 替代Hashtable
+ * 
+ * 
  * Java Collections Framework</a>.  Unlike the new collection
  * implementations, {@code Hashtable} is synchronized.  If a
  * thread-safe implementation is not needed, it is recommended to use
